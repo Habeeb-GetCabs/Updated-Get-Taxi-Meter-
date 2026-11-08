@@ -1,0 +1,8 @@
+{
+  "name": "GET TAXI",
+  "description": "A professional taxi meter application featuring real-time high-accuracy GPS tracking, integrated waiting charges, voice TTS alerts, background service tracking, crash trip recovery, local history database, and customizable fare engines.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

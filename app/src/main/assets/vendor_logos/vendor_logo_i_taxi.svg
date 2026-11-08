@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260" width="600" height="260">
+  <path d="M 108 10 L 492 10 Q 545 10 558 62 L 594 192 Q 602 250 546 250 L 54 250 Q -2 250 6 192 L 42 62 Q 55 10 108 10 Z" fill="#CA1F2F"/>
+  <text x="300" y="148" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-weight="bold" font-style="italic" font-size="76">
+    <tspan fill="#FFFFFF">I</tspan><tspan fill="#F8B814"> Taxi</tspan>
+  </text>
+  <path d="M 110 194 Q 305 180 512 190" fill="none" stroke="#F8B814" stroke-width="12" stroke-linecap="round"/>
+</svg>

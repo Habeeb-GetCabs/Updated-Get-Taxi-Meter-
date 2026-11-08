@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">GET TAXI</string>
+    <string name="device_status">சாதன நிலை</string>
+    <string name="vacant">காலியாக உள்ளது</string>
+    <string name="occupied">பயணத்தில் உள்ளது</string>
+    <string name="local_metered">உள்ளூர் / மீட்டர்</string>
+    <string name="hourly_rental">மணிநேர வாடகை</string>
+    <string name="outstation">வெளியூர் பயணம்</string>
+    <string name="current_fare">தற்போதைய கட்டணம்</string>
+    <string name="distance">பயண தூரம்</string>
+    <string name="wait_time">காத்திருப்பு நேரம்</string>
+    <string name="duration">பயண நேரம்</string>
+    <string name="start_trip">பயணத்தைத் தொடங்கு</string>
+    <string name="end_trip">பயணத்தை முடி</string>
+    <string name="trip_history">பயண வரலாறு</string>
+    <string name="invoices">ரசீதுகள்</string>
+    <string name="create_new_bill">புதிய ரசீதை உருவாக்கு</string>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="profile">சுயவிவரம்</string>
+    <string name="save">சேமி</string>
+    <string name="cancel">ரத்து செய்</string>
+    <string name="confirm">உறுதிப்படுத்து</string>
+    <string name="yes">ஆம்</string>
+    <string name="no">இல்லை</string>
+    <string name="no_recorded_trips_yet">இதுவரை பயணங்கள் எதுவும் பதிவாகவில்லை</string>
+    <string name="acquiring_gps">GPS இருப்பிடத்தைப் பெறுகிறது</string>
+</resources>

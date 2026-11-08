@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Outer Glow Circle -->
+    <path
+        android:fillColor="#40EA580C"
+        android:pathData="M24,24m-22,0a22,22 0 1,0 44,0a22,22 0 1,0 -44,0" />
+    <!-- Yellow Main Badge -->
+    <path
+        android:fillColor="#FACC15"
+        android:pathData="M24,24m-16,0a16,16 0 1,0 32,0a16,16 0 1,0 -32,0" />
+    <!-- Dark Border -->
+    <path
+        android:strokeColor="#0F172A"
+        android:strokeWidth="2.5"
+        android:pathData="M24,24m-16,0a16,16 0 1,0 32,0a16,16 0 1,0 -32,0" />
+    <!-- Top Direction Arrow -->
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M24,4 L28,10 L20,10 Z" />
+    <!-- Taxi Cab Icon Shape -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M16,28 L17,23 C17.3,21.8 18.4,21 19.6,21 L28.4,21 C29.6,21 30.7,21.8 31,23 L32,28 M15,28 C14.4,28 14,28.4 14,29 L14,33 C14,33.6 14.4,34 15,34 L16,34 C16.6,34 17,33.6 17,33 L17,32 L31,32 L31,33 C31,33.6 31.4,34 32,34 L33,34 C33.6,34 34,33.6 34,33 L34,29 C34,28.4 33.6,28 33,28 Z M18,30 A1.5,1.5 0 1,1 18,27 A1.5,1.5 0 1,1 18,30 M30,30 A1.5,1.5 0 1,1 30,27 A1.5,1.5 0 1,1 30,30" />
+</vector>
