@@ -126,7 +126,7 @@ fun AboutScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.get_taxi_logo),
-                            contentDescription = "Taxi Meter Pro Logo",
+                            contentDescription = "GET TAXI Logo",
                             modifier = Modifier.size(64.dp)
                         )
                     }
@@ -134,7 +134,7 @@ fun AboutScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Taxi Meter Pro",
+                        text = "GET TAXI",
                         color = Color(0xFF0F172A),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,

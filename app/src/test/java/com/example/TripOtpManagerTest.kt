@@ -13,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [33])
 class TripOtpManagerTest {
 
     private lateinit var otpManager: TripOtpManager
@@ -108,8 +108,8 @@ class TripOtpManagerTest {
     }
 
     @Test
-    fun `test 10 permanent OTPs work repeatedly without expiring or being consumed`() = runBlocking {
-        assertEquals(10, TripOtpManager.PERMANENT_OTPS.size)
+    fun `test 20 permanent OTPs work repeatedly without expiring or being consumed`() = runBlocking {
+        assertEquals(20, TripOtpManager.PERMANENT_OTPS.size)
 
         for (permanentOtp in TripOtpManager.PERMANENT_OTPS) {
             // First trip with this permanent OTP

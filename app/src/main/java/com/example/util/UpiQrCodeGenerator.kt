@@ -105,7 +105,7 @@ object UpiQrCodeGenerator {
 
     /**
      * Generates a complete, shareable UPI Payment Card Bitmap with the QR code,
-     * final fare amount, UPI ID, driver name, and "Taxi Meter Pro" branding.
+     * final fare amount, UPI ID, driver name, and "GET TAXI" branding.
      */
     fun generatePaymentCardBitmap(
         upiId: String,

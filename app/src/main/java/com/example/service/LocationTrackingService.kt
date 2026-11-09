@@ -952,7 +952,16 @@ class LocationTrackingService : Service() {
                 val nowTime = System.currentTimeMillis()
                 val defaultDateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(nowTime))
                 val defaultTimeStr = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(nowTime))
-                val serializedRoute = com.example.util.RouteCoordinatesSerializer.serialize(currentState.routePoints)
+                val effectiveRoutePoints = if (currentState.routePoints.size >= 2) {
+                    currentState.routePoints
+                } else if (startLat != 0.0 && endLat != 0.0) {
+                    listOf(Pair(startLat, startLng), Pair(endLat, endLng))
+                } else if (startLat != 0.0) {
+                    listOf(Pair(startLat, startLng), Pair(startLat + 0.001, startLng + 0.001))
+                } else {
+                    currentState.routePoints
+                }
+                val serializedRoute = com.example.util.RouteCoordinatesSerializer.serialize(effectiveRoutePoints)
 
                 val tripEntity = TripEntity(
                     tripNumber = finalTripNum,

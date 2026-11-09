@@ -55,9 +55,9 @@ import org.osmdroid.views.overlay.Polyline
 import java.util.Locale
 
 enum class MapTypeMode {
-    NAVIGATION_STREET, // CartoDB Voyager: Google Maps clean road network, readable street names, building footprints
+    OSM_CLASSIC,       // OpenStreetMap Standard Mapnik (Detailed roads, street names, live GPS)
     NAVIGATION_DARK,   // CartoDB Dark Matter: Night navigation mode
-    OSM_CLASSIC,       // OpenStreetMap Standard Mapnik
+    NAVIGATION_STREET, // CartoDB Voyager
     GOOGLE_MAPS_SDK    // Google Maps SDK (if API key is supplied)
 }
 
@@ -97,7 +97,11 @@ fun TripMapView(
     modifier: Modifier = Modifier,
     isNavigationConsoleMode: Boolean = false,
     onOpenMeterDetails: (() -> Unit)? = null,
-    onEndTrip: (() -> Unit)? = null
+    onEndTrip: (() -> Unit)? = null,
+    onPauseTrip: (() -> Unit)? = null,
+    onResumeTrip: (() -> Unit)? = null,
+    isExpanded: Boolean = false,
+    onToggleExpand: (() -> Unit)? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -108,8 +112,8 @@ fun TripMapView(
             !mapsApiKey.contains("MY_GEMINI_API_KEY", ignoreCase = true) &&
             !mapsApiKey.contains("AIzaSyB7j5s8T369OKe4H69e3jhkGfM2sJhniCo", ignoreCase = true)
 
-    // Primary default map style is Navigation Street (clean Google Maps aesthetic)
-    var selectedMode by remember { mutableStateOf(MapTypeMode.NAVIGATION_STREET) }
+    // Primary default map style is OpenStreetMap Standard Mapnik with all roads, streets and labels
+    var selectedMode by remember { mutableStateOf(MapTypeMode.OSM_CLASSIC) }
     var orientationMode by remember { mutableStateOf(MapOrientationMode.NORTH_UP) }
     var isFollowingVehicle by remember { mutableStateOf(true) }
 
@@ -316,6 +320,44 @@ fun TripMapView(
                     .align(Alignment.TopCenter)
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
+                // In expanded mode, show GET TAXI logo at top-left and collapse button
+                if (isExpanded && onToggleExpand != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        VendorLogoBadge(
+                            vendorId = com.example.util.VendorLogoRenderer.GET_TAXI_VENDOR_ID,
+                            vendorName = com.example.util.VendorLogoRenderer.GET_TAXI_VENDOR_NAME,
+                            height = 38.dp,
+                            testTag = "expanded_map_get_taxi_logo"
+                        )
+
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 4.dp
+                        ) {
+                            IconButton(
+                                onClick = onToggleExpand,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .testTag("collapse_map_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FullscreenExit,
+                                    contentDescription = "Collapse Map",
+                                    tint = Color(0xFF0F172A),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Surface(
                     color = Color.White,
                     shape = RoundedCornerShape(18.dp),
@@ -403,6 +445,23 @@ fun TripMapView(
                                     contentDescription = "Clear",
                                     tint = Color(0xFF64748B),
                                     modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        // Expand map button when in normal mode
+                        if (!isExpanded && onToggleExpand != null) {
+                            IconButton(
+                                onClick = onToggleExpand,
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .testTag("expand_map_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Fullscreen,
+                                    contentDescription = "Expand Map",
+                                    tint = Color(0xFF1A73E8),
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         }
@@ -846,12 +905,43 @@ fun TripMapView(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Compact Action Buttons Row (Meter Details + End Trip)
+                        // Action Buttons Row (Pause/Resume + Meter Details + End Trip)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Pause / Resume Trip Button
+                            if (onPauseTrip != null || onResumeTrip != null) {
+                                val isPaused = tripState.status == com.example.data.model.TripStatus.PAUSED
+                                Button(
+                                    onClick = { if (isPaused) onResumeTrip?.invoke() else onPauseTrip?.invoke() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isPaused) Color(0xFF16A34A) else Color(0xFFF59E0B),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .testTag(if (isPaused) "resume_trip_button" else "pause_trip_button")
+                                ) {
+                                    Icon(
+                                        imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isPaused) "Resume" else "Pause",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
                             // Meter Details Button
                             if (onOpenMeterDetails != null) {
                                 Button(
@@ -940,17 +1030,17 @@ private fun OpenStreetMapTileView(
     val routePoints = tripState.routePoints
 
     LaunchedEffect(Unit) {
-        org.osmdroid.config.Configuration.getInstance().userAgentValue = context.packageName
+        org.osmdroid.config.Configuration.getInstance().userAgentValue = "GET_TAXI_Android_App/1.0 (${context.packageName})"
     }
 
     AndroidView(
         factory = { ctx ->
-            org.osmdroid.config.Configuration.getInstance().userAgentValue = ctx.packageName
+            org.osmdroid.config.Configuration.getInstance().userAgentValue = "GET_TAXI_Android_App/1.0 (${ctx.packageName})"
             MapView(ctx).apply {
                 val tileSource = when (tileSourceType) {
                     MapTypeMode.NAVIGATION_DARK -> TILE_SOURCE_DARK
-                    MapTypeMode.OSM_CLASSIC -> TileSourceFactory.MAPNIK
-                    else -> TILE_SOURCE_VOYAGER
+                    MapTypeMode.NAVIGATION_STREET -> TILE_SOURCE_VOYAGER
+                    else -> TileSourceFactory.MAPNIK
                 }
                 setTileSource(tileSource)
                 setMultiTouchControls(true)
@@ -971,8 +1061,8 @@ private fun OpenStreetMapTileView(
             // Switch tile source if style changed
             val targetTileSource = when (tileSourceType) {
                 MapTypeMode.NAVIGATION_DARK -> TILE_SOURCE_DARK
-                MapTypeMode.OSM_CLASSIC -> TileSourceFactory.MAPNIK
-                else -> TILE_SOURCE_VOYAGER
+                MapTypeMode.NAVIGATION_STREET -> TILE_SOURCE_VOYAGER
+                else -> TileSourceFactory.MAPNIK
             }
             if (mapView.tileProvider.tileSource.name() != targetTileSource.name()) {
                 mapView.setTileSource(targetTileSource)

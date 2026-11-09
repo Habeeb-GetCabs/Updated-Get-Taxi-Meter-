@@ -44,6 +44,7 @@ import com.example.data.model.ActiveTripDisplayMode
 import com.example.data.model.ExtraChargeItem
 import com.example.data.model.ServiceType
 import com.example.data.model.TripStatus
+import com.example.data.preferences.TripOtpManager
 import com.example.ui.components.BatteryOptimizationCard
 import com.example.ui.components.CreatorSignatureBanner
 import com.example.ui.components.FloatingSpeedPermissionCard
@@ -83,6 +84,9 @@ fun HomeMeterScreen(
     var showExtraChargesDialog by remember { mutableStateOf(false) }
     var showVendorSelectorDialog by remember { mutableStateOf(false) }
     var showLogoStyleDialog by remember { mutableStateOf(false) }
+    var isMapExpanded by remember { mutableStateOf(false) }
+    var showOtpDialog by remember { mutableStateOf(false) }
+    var showTopMenu by remember { mutableStateOf(false) }
 
     val isTripActive = tripState.status == TripStatus.RUNNING || tripState.status == TripStatus.PAUSED
 
@@ -180,40 +184,14 @@ fun HomeMeterScreen(
                             .testTag("brand_header_title")
                     ) {
                         VendorLogoBadge(
-                            vendorId = currentHeaderVendorId,
-                            vendorName = currentHeaderVendorName,
-                            height = 46.dp,
+                            vendorId = VendorLogoRenderer.GET_TAXI_VENDOR_ID,
+                            vendorName = VendorLogoRenderer.GET_TAXI_VENDOR_NAME,
+                            height = 42.dp,
                             testTag = "header_vendor_logo_badge"
                         )
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { showLogoStyleDialog = true },
-                        modifier = Modifier
-                            .testTag("logo_style_customizer_button")
-                            .minimumInteractiveComponentSize()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = "Logo Color & Font",
-                            tint = Color(0xFF0F296B)
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onNavigateToVendorManagement,
-                        modifier = Modifier
-                            .testTag("vendor_management_top_button")
-                            .minimumInteractiveComponentSize()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Storefront,
-                            contentDescription = strings.vendorManagementTitle,
-                            tint = Color(0xFF0F296B)
-                        )
-                    }
-
                     IconButton(
                         onClick = onNavigateToProfile,
                         modifier = Modifier
@@ -228,19 +206,6 @@ fun HomeMeterScreen(
                     }
 
                     IconButton(
-                        onClick = onNavigateToAbout,
-                        modifier = Modifier
-                            .testTag("about_us_button")
-                            .minimumInteractiveComponentSize()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = strings.aboutUs,
-                            tint = Color(0xFF475569)
-                        )
-                    }
-
-                    IconButton(
                         onClick = onNavigateToSettings,
                         modifier = Modifier
                             .testTag("settings_button")
@@ -251,6 +216,87 @@ fun HomeMeterScreen(
                             contentDescription = strings.settings,
                             tint = Color(0xFF475569)
                         )
+                    }
+
+                    Box {
+                        IconButton(
+                            onClick = { showTopMenu = true },
+                            modifier = Modifier
+                                .testTag("top_overflow_menu_button")
+                                .minimumInteractiveComponentSize()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More Options",
+                                tint = Color(0xFF0F296B)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showTopMenu,
+                            onDismissRequest = { showTopMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Change Vendor") },
+                                onClick = {
+                                    showTopMenu = false
+                                    showVendorSelectorDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.SwapHoriz,
+                                        contentDescription = null,
+                                        tint = Color(0xFFCA1F2F)
+                                    )
+                                },
+                                modifier = Modifier.testTag("menu_change_vendor_item")
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text(strings.vendorManagementTitle) },
+                                onClick = {
+                                    showTopMenu = false
+                                    onNavigateToVendorManagement()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Storefront,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0F296B)
+                                    )
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Logo Color & Font") },
+                                onClick = {
+                                    showTopMenu = false
+                                    showLogoStyleDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Palette,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0F296B)
+                                    )
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text(strings.aboutUs) },
+                                onClick = {
+                                    showTopMenu = false
+                                    onNavigateToAbout()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = Color(0xFF475569)
+                                    )
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -471,59 +517,15 @@ fun HomeMeterScreen(
                         .testTag("enlarged_active_trip_map_section"),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Compact Active Trip Vendor + Service Type Banner
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(18.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                VendorLogoBadge(
-                                    vendorId = currentHeaderVendorId,
-                                    vendorName = currentHeaderVendorName,
-                                    height = 36.dp
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = currentHeaderVendorName,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 14.sp,
-                                        color = Color(0xFF0F172A),
-                                        modifier = Modifier.testTag("active_trip_vendor_name")
-                                    )
-                                    Text(
-                                        text = "${strings.serviceTypeTitle(currentMode)} • ${strings.vendorLockedForTrip}",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                            }
-
-                            LiveSpeedBubble(
-                                speedKmH = tripState.speedKmH,
-                                visible = true
-                            )
-                        }
-                    }
-
-                    // ENLARGED LIVE CENTRE-CONSOLE MAP (GOOGLE MAPS DRIVING INTERFACE)
+                    // LIVE CENTRE-CONSOLE MAP (GOOGLE MAPS DRIVING INTERFACE)
                     TripMapView(
                         tripState = tripState,
                         isNavigationConsoleMode = true,
+                        isExpanded = false,
+                        onToggleExpand = { isMapExpanded = true },
                         onOpenMeterDetails = { viewModel.showMeterDetails() },
+                        onPauseTrip = { viewModel.pauseTrip() },
+                        onResumeTrip = { viewModel.resumeTrip() },
                         onEndTrip = {
                             viewModel.completeTripAndSave("", "", "") { savedId ->
                                 onNavigateToSummary(savedId.toInt())
@@ -616,162 +618,6 @@ fun HomeMeterScreen(
                             .height(240.dp)
                             .padding(vertical = 4.dp)
                     )
-                }
-
-                // =========================================================================
-                // PART 3: PER-TRIP VENDOR SELECTION CARD (LOCKED DURING ACTIVE TRIP)
-                // =========================================================================
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(24.dp))
-                        .testTag("per_trip_vendor_selector_card")
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (isTripActive) strings.activeTripVendorHeader else strings.selectVendorHeader,
-                                color = Color(0xFF94A3B8),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = if (strings.isTamil) 0.2.sp else 1.2.sp
-                            )
-                            if (isTripActive) {
-                                Surface(
-                                    color = Color(0xFFFEF2F2),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFFEE2E2))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Lock,
-                                            contentDescription = strings.vendorLockedForTrip,
-                                            tint = Color(0xFFE53935),
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = strings.vendorLockedForTrip,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFE53935)
-                                        )
-                                    }
-                                }
-                            } else {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(
-                                        onClick = { showLogoStyleDialog = true },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                                        modifier = Modifier
-                                            .height(28.dp)
-                                            .testTag("home_logo_color_font_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Palette,
-                                            contentDescription = null,
-                                            tint = Color(0xFF0F296B),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "Color & Font",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF0F296B)
-                                        )
-                                    }
-                                    TextButton(
-                                        onClick = onNavigateToVendorManagement,
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                                        modifier = Modifier
-                                            .height(28.dp)
-                                            .testTag("home_manage_vendors_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Storefront,
-                                            contentDescription = null,
-                                            tint = Color(0xFF0F296B),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = strings.manageVendorsButton,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF0F296B)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                VendorLogoBadge(
-                                    vendorId = currentHeaderVendorId,
-                                    vendorName = currentHeaderVendorName,
-                                    height = 42.dp,
-                                    testTag = "selected_vendor_logo_badge"
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = currentHeaderVendorName,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 15.sp,
-                                        color = Color(0xFF0F172A),
-                                        modifier = Modifier.testTag("selected_vendor_name_text")
-                                    )
-                                    Text(
-                                        text = strings.perTripVendorHint,
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                            }
-
-                            if (!isTripActive) {
-                                OutlinedButton(
-                                    onClick = { showVendorSelectorDialog = true },
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFCA1F2F)),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCA1F2F)),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                                    modifier = Modifier.testTag("select_vendor_button")
-                                ) {
-                                    Text(
-                                        text = strings.changeVendorButton,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // SERVICE TYPE SELECTION COMPONENT
@@ -1138,6 +984,7 @@ fun HomeMeterScreen(
                     status = tripState.status,
                     currentMode = currentMode,
                     onStartTrip = { viewModel.startTrip() },
+                    onStartOtpTrip = { showOtpDialog = true },
                     onPauseTrip = { viewModel.pauseTrip() },
                     onResumeTrip = { viewModel.resumeTrip() },
                     onEndTrip = {
@@ -1340,6 +1187,52 @@ fun HomeMeterScreen(
             onDismiss = { showExtraChargesDialog = false }
         )
     }
+
+    // OTP TRIP AUTHORIZATION DIALOG
+    if (showOtpDialog) {
+        OtpTripDialog(
+            onDismiss = { showOtpDialog = false },
+            onOtpVerifiedAndStart = {
+                showOtpDialog = false
+                viewModel.startTrip()
+            }
+        )
+    }
+
+    // EXPANDED LIVE MAP FULL-SCREEN OVERLAY
+    if (isMapExpanded && isTripActive) {
+        Dialog(
+            onDismissRequest = { isMapExpanded = false },
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                TripMapView(
+                    tripState = tripState,
+                    isNavigationConsoleMode = true,
+                    isExpanded = true,
+                    onToggleExpand = { isMapExpanded = false },
+                    onOpenMeterDetails = {
+                        isMapExpanded = false
+                        viewModel.showMeterDetails()
+                    },
+                    onPauseTrip = { viewModel.pauseTrip() },
+                    onResumeTrip = { viewModel.resumeTrip() },
+                    onEndTrip = {
+                        isMapExpanded = false
+                        viewModel.completeTripAndSave("", "", "") { savedId ->
+                            onNavigateToSummary(savedId.toInt())
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("expanded_active_trip_map")
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -1347,6 +1240,7 @@ private fun ActiveTripActionButtonsRow(
     status: TripStatus,
     currentMode: ServiceType,
     onStartTrip: () -> Unit,
+    onStartOtpTrip: (() -> Unit)? = null,
     onPauseTrip: () -> Unit,
     onResumeTrip: () -> Unit,
     onEndTrip: () -> Unit
@@ -1369,35 +1263,103 @@ private fun ActiveTripActionButtonsRow(
             when (targetStatus) {
                 TripStatus.IDLE, TripStatus.FINISHED -> {
                     val startButtonLabel = strings.startTripLabelForMode(currentMode)
-                    Button(
-                        onClick = onStartTrip,
-                        enabled = true,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(32.dp),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("start_trip_button")
-                    ) {
+                    if (onStartOtpTrip != null) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(26.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = startButtonLabel,
-                                fontSize = if (strings.isTamil) 13.sp else 15.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = if (strings.isTamil) 0.sp else 1.sp,
-                                textAlign = TextAlign.Center
-                            )
+                            Button(
+                                onClick = onStartTrip,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE53935),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(32.dp),
+                                modifier = Modifier
+                                    .weight(1.2f)
+                                    .fillMaxHeight()
+                                    .testTag("start_trip_button")
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "START (DIRECT)",
+                                        fontSize = if (strings.isTamil) 12.sp else 13.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = onStartOtpTrip,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF0F296B),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(32.dp),
+                                modifier = Modifier
+                                    .weight(1.1f)
+                                    .fillMaxHeight()
+                                    .testTag("start_otp_trip_button")
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Pin,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFD700),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "START WITH OTP",
+                                        fontSize = if (strings.isTamil) 12.sp else 13.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = onStartTrip,
+                            enabled = true,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE53935),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(32.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("start_trip_button")
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = startButtonLabel,
+                                    fontSize = if (strings.isTamil) 13.sp else 15.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = if (strings.isTamil) 0.sp else 1.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
@@ -1936,6 +1898,193 @@ private fun ActiveMeterExtraChargesDialog(
 }
 
 @Composable
+private fun OtpTripDialog(
+    onDismiss: () -> Unit,
+    onOtpVerifiedAndStart: () -> Unit
+) {
+    var enteredOtp by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showCodesList by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(26.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .background(Color(0xFFFEF2F2), CircleShape)
+                        .border(1.dp, Color(0xFFFEE2E2), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Pin,
+                        contentDescription = null,
+                        tint = Color(0xFFE53935),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Trip Authorization OTP",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Surface(
+                    color = Color(0xFFEFF6FF),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFDBEAFE)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Color(0xFF1E40AF),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = TripOtpManager.CUSTOMER_OTP_MESSAGE,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1E40AF),
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = enteredOtp,
+                    onValueChange = {
+                        if (it.length <= 4 && it.all { ch -> ch.isDigit() }) {
+                            enteredOtp = it
+                            errorMessage = null
+                        }
+                    },
+                    label = { Text("Enter 4-Digit OTP") },
+                    placeholder = { Text("e.g. 1010, 2020, 1234") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 6.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    isError = errorMessage != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("trip_otp_input_field")
+                )
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = errorMessage ?: "",
+                        color = Color(0xFFDC2626),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextButton(
+                    onClick = { showCodesList = !showCodesList },
+                    modifier = Modifier.testTag("toggle_otp_codes_helper")
+                ) {
+                    Text(
+                        text = if (showCodesList) "Hide Standard 20 OTPs" else "View Standard 20 OTPs",
+                        fontSize = 11.sp,
+                        color = Color(0xFF2563EB),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                if (showCodesList) {
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = TripOtpManager.PERMANENT_OTPS.chunked(5).joinToString("\n") { row -> row.joinToString("   ") },
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF334155),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel", color = Color(0xFF64748B))
+                    }
+
+                    Button(
+                        onClick = {
+                            val clean = enteredOtp.trim()
+                            if (clean.length != 4) {
+                                errorMessage = "Please enter all 4 digits."
+                            } else if (TripOtpManager.PERMANENT_OTPS.contains(clean)) {
+                                onOtpVerifiedAndStart()
+                            } else {
+                                errorMessage = "Invalid Trip OTP. Please ask customer for correct 4-digit code."
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .testTag("verify_otp_start_button")
+                    ) {
+                        Text("Verify & Start", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CreateManualBillDialog(
     currency: String,
     selectedVendor: VendorProfileEntity,
@@ -1957,6 +2106,7 @@ private fun CreateManualBillDialog(
         invoiceTime: String
     ) -> Unit
 ) {
+    val context = LocalContext.current
     val strings = com.example.util.appStrings()
     var selectedMode by remember { mutableStateOf(ServiceType.LOCAL) }
     var custName by remember { mutableStateOf("") }
@@ -1964,19 +2114,130 @@ private fun CreateManualBillDialog(
     var custAddress by remember { mutableStateOf("") }
     var pickupAddr by remember { mutableStateOf("") }
     var dropAddr by remember { mutableStateOf("") }
-    var distanceInput by remember { mutableStateOf("10.0") }
-    var durationInput by remember { mutableStateOf("25") }
-    var waitInput by remember { mutableStateOf("0") }
-    var baseFareInput by remember { mutableStateOf("100") }
-    var extraChargesInput by remember { mutableStateOf("0") }
-    var finalFareInput by remember { mutableStateOf("400") }
 
-    val currentTimestamp = remember { System.currentTimeMillis() }
+    // Date & Time Picker Setup
+    val calendar = remember { java.util.Calendar.getInstance() }
     var invoiceDateInput by remember {
-        mutableStateOf(SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(currentTimestamp)))
+        mutableStateOf(SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(calendar.time))
     }
     var invoiceTimeInput by remember {
-        mutableStateOf(SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(currentTimestamp)))
+        mutableStateOf(SimpleDateFormat("hh:mm a", Locale.getDefault()).format(calendar.time))
+    }
+
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                calendar.set(java.util.Calendar.YEAR, year)
+                calendar.set(java.util.Calendar.MONTH, month)
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, dayOfMonth)
+                invoiceDateInput = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(calendar.time)
+            },
+            calendar.get(java.util.Calendar.YEAR),
+            calendar.get(java.util.Calendar.MONTH),
+            calendar.get(java.util.Calendar.DAY_OF_MONTH)
+        )
+    }
+
+    val timePickerDialog = remember {
+        android.app.TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(java.util.Calendar.MINUTE, minute)
+                invoiceTimeInput = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(calendar.time)
+            },
+            calendar.get(java.util.Calendar.HOUR_OF_DAY),
+            calendar.get(java.util.Calendar.MINUTE),
+            false
+        )
+    }
+
+    // Common Waiting Charge inputs for all 3 modes
+    var waitMinutesInput by remember { mutableStateOf("0") }
+    var waitRatePerMinInput by remember { mutableStateOf("2.0") }
+
+    // Local Mode Inputs
+    var localDistanceInput by remember { mutableStateOf("10.0") }
+    var localRatePerKmInput by remember { mutableStateOf("15.0") }
+    var localBaseFareInput by remember { mutableStateOf("100.0") }
+    var localExtraChargesInput by remember { mutableStateOf("0.0") }
+
+    // Hourly Rental Mode Inputs (Test scenario: 4 hrs @ ₹350 = 1,400. 60 km with 10 km/hr free = 40 km free. Chargeable = 20 km @ ₹20 = 400. Total = 1,800)
+    var rentalHoursInput by remember { mutableStateOf("4") }
+    var rentalHourlyRateInput by remember { mutableStateOf("350.0") }
+    var rentalTotalDistanceInput by remember { mutableStateOf("60.0") }
+    var rentalFreeKmPerHourInput by remember { mutableStateOf("10.0") }
+    var rentalExtraKmRateInput by remember { mutableStateOf("20.0") }
+    var rentalExtraChargesInput by remember { mutableStateOf("0.0") }
+
+    // Outstation Mode Inputs
+    var outstationDistanceInput by remember { mutableStateOf("100.0") }
+    var outstationRatePerKmInput by remember { mutableStateOf("14.0") }
+    var outstationDriverBattaInput by remember { mutableStateOf("400.0") }
+    var outstationTollInput by remember { mutableStateOf("0.0") }
+    var outstationPermitInput by remember { mutableStateOf("0.0") }
+    var outstationParkingInput by remember { mutableStateOf("0.0") }
+    var outstationOtherExtraInput by remember { mutableStateOf("0.0") }
+
+    // Shared Duration in minutes for local/outstation
+    var localDurationInput by remember { mutableStateOf("30") }
+
+    // Calculations based on mode
+    val waitMins = waitMinutesInput.toDoubleOrNull() ?: 0.0
+    val waitRate = waitRatePerMinInput.toDoubleOrNull() ?: 2.0
+    val computedWaitCharge = (waitMins * waitRate).coerceAtLeast(0.0)
+
+    val (computedAutoTotal, computedBase, computedDist, computedExtras) = when (selectedMode) {
+        ServiceType.LOCAL -> {
+            val dist = localDistanceInput.toDoubleOrNull() ?: 0.0
+            val rate = localRatePerKmInput.toDoubleOrNull() ?: 15.0
+            val base = localBaseFareInput.toDoubleOrNull() ?: 100.0
+            val extra = localExtraChargesInput.toDoubleOrNull() ?: 0.0
+            val distCharge = dist * rate
+            val total = base + distCharge + computedWaitCharge + extra
+            listOf(total, base, dist, extra + computedWaitCharge)
+        }
+        ServiceType.RENTAL -> {
+            val hrs = rentalHoursInput.toDoubleOrNull() ?: 1.0
+            val hourlyRate = rentalHourlyRateInput.toDoubleOrNull() ?: 350.0
+            val totalDist = rentalTotalDistanceInput.toDoubleOrNull() ?: 0.0
+            val freeKmPerHr = rentalFreeKmPerHourInput.toDoubleOrNull() ?: 10.0
+            val extraKmRate = rentalExtraKmRateInput.toDoubleOrNull() ?: 20.0
+            val extra = rentalExtraChargesInput.toDoubleOrNull() ?: 0.0
+
+            val hourlyFare = hrs * hourlyRate
+            val freeKm = hrs * freeKmPerHr
+            val chargeableKm = (totalDist - freeKm).coerceAtLeast(0.0)
+            val extraKmCharge = chargeableKm * extraKmRate
+            val total = hourlyFare + extraKmCharge + computedWaitCharge + extra
+            listOf(total, hourlyFare, totalDist, extraKmCharge + computedWaitCharge + extra)
+        }
+        ServiceType.OUTSTATION -> {
+            val dist = outstationDistanceInput.toDoubleOrNull() ?: 0.0
+            val rate = outstationRatePerKmInput.toDoubleOrNull() ?: 14.0
+            val batta = outstationDriverBattaInput.toDoubleOrNull() ?: 400.0
+            val toll = outstationTollInput.toDoubleOrNull() ?: 0.0
+            val permit = outstationPermitInput.toDoubleOrNull() ?: 0.0
+            val parking = outstationParkingInput.toDoubleOrNull() ?: 0.0
+            val otherExtra = outstationOtherExtraInput.toDoubleOrNull() ?: 0.0
+
+            val distCharge = dist * rate
+            val combinedExtras = toll + permit + parking + otherExtra + computedWaitCharge
+            val total = distCharge + batta + combinedExtras
+            listOf(total, batta, dist, combinedExtras)
+        }
+    }
+
+    // Editable Final Total with live sync
+    var finalFareInput by remember { mutableStateOf(String.format(Locale.US, "%.2f", computedAutoTotal)) }
+    var lastComputedTotal by remember { mutableDoubleStateOf(computedAutoTotal) }
+
+    LaunchedEffect(computedAutoTotal) {
+        if (computedAutoTotal != lastComputedTotal) {
+            finalFareInput = String.format(Locale.US, "%.2f", computedAutoTotal)
+            lastComputedTotal = computedAutoTotal
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -2014,18 +2275,18 @@ private fun CreateManualBillDialog(
                     modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                 )
 
-                // Editable Invoice Date & Time for bill generation
+                // 1. EDITABLE INVOICE DATE & TIME PICKER SECTION
                 Surface(
                     color = Color(0xFFF8FAFC),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp)
+                        .padding(bottom = 12.dp)
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "INVOICE DATE & TIME (EDITABLE)",
+                            text = "BILL DATE & TIME (CALENDAR & CLOCK PICKERS)",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF475569),
@@ -2039,8 +2300,17 @@ private fun CreateManualBillDialog(
                             OutlinedTextField(
                                 value = invoiceDateInput,
                                 onValueChange = { invoiceDateInput = it },
-                                label = { Text("Invoice Date") },
-                                placeholder = { Text("e.g. 08 Nov 2026") },
+                                label = { Text("Date") },
+                                trailingIcon = {
+                                    IconButton(onClick = { datePickerDialog.show() }) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarToday,
+                                            contentDescription = "Pick Date",
+                                            tint = Color(0xFF1E3A8A),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                },
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
@@ -2051,7 +2321,16 @@ private fun CreateManualBillDialog(
                                 value = invoiceTimeInput,
                                 onValueChange = { invoiceTimeInput = it },
                                 label = { Text("Time") },
-                                placeholder = { Text("e.g. 03:45 PM") },
+                                trailingIcon = {
+                                    IconButton(onClick = { timePickerDialog.show() }) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccessTime,
+                                            contentDescription = "Pick Time",
+                                            tint = Color(0xFF1E3A8A),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                },
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
@@ -2062,7 +2341,7 @@ private fun CreateManualBillDialog(
                     }
                 }
 
-                // Service Mode Selector
+                // 2. SERVICE MODE SELECTOR (Local, Rental, Outstation)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -2087,8 +2366,9 @@ private fun CreateManualBillDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
+                // Customer Info Fields
                 OutlinedTextField(
                     value = custName,
                     onValueChange = { custName = it },
@@ -2151,56 +2431,347 @@ private fun CreateManualBillDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = distanceInput,
-                        onValueChange = { distanceInput = it },
-                        label = { Text(strings.distanceKmLabel) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = durationInput,
-                        onValueChange = { durationInput = it },
-                        label = { Text(strings.durationMinLabel) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                // 3. MODE-SPECIFIC TARIFF & FARE CALCULATOR INPUTS
+                when (selectedMode) {
+                    ServiceType.LOCAL -> {
+                        Surface(
+                            color = Color(0xFFF1F5F9),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "LOCAL METERED FARE CALCULATOR",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF334155)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = localDistanceInput,
+                                        onValueChange = { localDistanceInput = it },
+                                        label = { Text("Distance (KM)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = localRatePerKmInput,
+                                        onValueChange = { localRatePerKmInput = it },
+                                        label = { Text("Rate ($currency/KM)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = localBaseFareInput,
+                                        onValueChange = { localBaseFareInput = it },
+                                        label = { Text("Base Fare ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = localExtraChargesInput,
+                                        onValueChange = { localExtraChargesInput = it },
+                                        label = { Text("Extra Charges ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    ServiceType.RENTAL -> {
+                        Surface(
+                            color = Color(0xFFF1F5F9),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "HOURLY RENTAL FARE CALCULATOR",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF334155)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = rentalHoursInput,
+                                        onValueChange = { rentalHoursInput = it },
+                                        label = { Text("Duration (Hours)") },
+                                        placeholder = { Text("e.g. 4") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = rentalHourlyRateInput,
+                                        onValueChange = { rentalHourlyRateInput = it },
+                                        label = { Text("Rate ($currency/Hr)") },
+                                        placeholder = { Text("e.g. 350") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = rentalTotalDistanceInput,
+                                        onValueChange = { rentalTotalDistanceInput = it },
+                                        label = { Text("Total Distance (KM)") },
+                                        placeholder = { Text("e.g. 60") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = rentalFreeKmPerHourInput,
+                                        onValueChange = { rentalFreeKmPerHourInput = it },
+                                        label = { Text("Free KM/Hr") },
+                                        placeholder = { Text("e.g. 10") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = rentalExtraKmRateInput,
+                                        onValueChange = { rentalExtraKmRateInput = it },
+                                        label = { Text("Extra KM Rate ($currency/KM)") },
+                                        placeholder = { Text("e.g. 20") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = rentalExtraChargesInput,
+                                        onValueChange = { rentalExtraChargesInput = it },
+                                        label = { Text("Extra Charges ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = baseFareInput,
-                        onValueChange = { baseFareInput = it },
-                        label = { Text(String.format(Locale.US, strings.baseFareLabelFormat, currency)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = extraChargesInput,
-                        onValueChange = { extraChargesInput = it },
-                        label = { Text(String.format(Locale.US, strings.extraChargesLabelFormat, currency)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("manual_bill_extra_charges")
-                    )
+                    ServiceType.OUTSTATION -> {
+                        Surface(
+                            color = Color(0xFFF1F5F9),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "OUTSTATION FARE CALCULATOR",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF334155)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = outstationDistanceInput,
+                                        onValueChange = { outstationDistanceInput = it },
+                                        label = { Text("Distance (KM)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = outstationRatePerKmInput,
+                                        onValueChange = { outstationRatePerKmInput = it },
+                                        label = { Text("Rate ($currency/KM)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = outstationDriverBattaInput,
+                                        onValueChange = { outstationDriverBattaInput = it },
+                                        label = { Text("Driver Batta / Base ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = outstationTollInput,
+                                        onValueChange = { outstationTollInput = it },
+                                        label = { Text("Toll ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = outstationPermitInput,
+                                        onValueChange = { outstationPermitInput = it },
+                                        label = { Text("Permit ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    OutlinedTextField(
+                                        value = outstationParkingInput,
+                                        onValueChange = { outstationParkingInput = it },
+                                        label = { Text("Parking ($currency)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = outstationOtherExtraInput,
+                                    onValueChange = { outstationOtherExtraInput = it },
+                                    label = { Text("Other Extra Charges ($currency)") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // 4. ITEMIZED WAITING TIME INPUT FOR ALL MODES
+                Surface(
+                    color = Color(0xFFFEF3C7).copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "ITEMIZED WAITING CHARGE",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF92400E)
+                            )
+                            Text(
+                                text = "= $currency ${String.format(Locale.US, "%.2f", computedWaitCharge)}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF92400E)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = waitMinutesInput,
+                                onValueChange = { waitMinutesInput = it },
+                                label = { Text("Wait Time (Mins)") },
+                                placeholder = { Text("e.g. 15") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = waitRatePerMinInput,
+                                onValueChange = { waitRatePerMinInput = it },
+                                label = { Text("Wait Rate ($currency/Min)") },
+                                placeholder = { Text("e.g. 2.0") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 5. LIVE AUTOMATIC FARE BREAKDOWN & TOTAL CARD
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "CALCULATED TOTAL FARE",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF94A3B8)
+                            )
+                            Text(
+                                text = "$currency ${String.format(Locale.US, "%.2f", computedAutoTotal)}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFFF8B814)
+                            )
+                        }
+                        if (selectedMode == ServiceType.RENTAL) {
+                            val hrs = rentalHoursInput.toDoubleOrNull() ?: 0.0
+                            val hrRate = rentalHourlyRateInput.toDoubleOrNull() ?: 0.0
+                            val tDist = rentalTotalDistanceInput.toDoubleOrNull() ?: 0.0
+                            val freeKm = hrs * (rentalFreeKmPerHourInput.toDoubleOrNull() ?: 10.0)
+                            val chKm = (tDist - freeKm).coerceAtLeast(0.0)
+                            val extraDistRate = rentalExtraKmRateInput.toDoubleOrNull() ?: 20.0
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${hrs.toInt()} hrs @ $currency$hrRate = $currency${(hrs * hrRate).toInt()} | " +
+                                        "${tDist.toInt()} KM with ${freeKm.toInt()} KM free = ${chKm.toInt()} KM extra @ $currency$extraDistRate = $currency${(chKm * extraDistRate).toInt()}",
+                                fontSize = 10.sp,
+                                color = Color(0xFFCBD5E1)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Final Total Input (editable if driver wants to apply custom rounding/discount)
                 OutlinedTextField(
                     value = finalFareInput,
                     onValueChange = { finalFareInput = it },
@@ -2233,12 +2804,11 @@ private fun CreateManualBillDialog(
 
                     Button(
                         onClick = {
-                            val dist = distanceInput.toDoubleOrNull() ?: 0.0
-                            val dur = durationInput.toLongOrNull() ?: 15L
-                            val wait = waitInput.toLongOrNull() ?: 0L
-                            val base = baseFareInput.toDoubleOrNull() ?: 100.0
-                            val extra = extraChargesInput.toDoubleOrNull() ?: 0.0
-                            val total = (finalFareInput.toDoubleOrNull() ?: (base + extra)).coerceAtLeast(0.0)
+                            val finalTotal = (finalFareInput.toDoubleOrNull() ?: computedAutoTotal).coerceAtLeast(0.0)
+                            val durMinutes = when (selectedMode) {
+                                ServiceType.RENTAL -> ((rentalHoursInput.toDoubleOrNull() ?: 1.0) * 60).toLong()
+                                else -> localDurationInput.toLongOrNull() ?: 30L
+                            }
 
                             onCreateBill(
                                 selectedMode,
@@ -2247,12 +2817,12 @@ private fun CreateManualBillDialog(
                                 custAddress,
                                 pickupAddr,
                                 dropAddr,
-                                dist,
-                                dur,
-                                wait,
-                                base,
-                                extra,
-                                total,
+                                computedDist,
+                                durMinutes,
+                                waitMins.toLong(),
+                                computedBase,
+                                computedExtras,
+                                finalTotal,
                                 invoiceDateInput.trim(),
                                 invoiceTimeInput.trim()
                             )
@@ -2263,7 +2833,12 @@ private fun CreateManualBillDialog(
                             .weight(1.4f)
                             .testTag("manual_bill_submit_button")
                     ) {
-                        Text(strings.generateBillButton, fontWeight = FontWeight.Black, color = Color.White, fontSize = if (strings.isTamil) 12.sp else 14.sp)
+                        Text(
+                            text = strings.generateBillButton,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            fontSize = if (strings.isTamil) 12.sp else 14.sp
+                        )
                     }
                 }
             }

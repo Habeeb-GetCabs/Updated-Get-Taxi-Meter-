@@ -45,23 +45,17 @@ class TripOtpManager(private val context: Context) {
         val KEY_CONSUMED_OTPS_SET = stringSetPreferencesKey("trip_consumed_otps_history")
 
         const val ADMIN_PASSWORD = "0710"
+        const val CUSTOMER_OTP_MESSAGE = "Please share your trip OTP with the driver before starting your journey."
 
         /**
-         * 10 permanent, easy-to-note 4-digit Trip OTP codes that can be shared with
-         * drivers and customers at any time without needing to generate a new OTP.
-         * These permanent OTPs never expire and are never marked as consumed.
+         * 20 permanent, easy-to-note 4-digit Trip OTP codes that can be shared with
+         * drivers and customers at any time. Reusable, no burn/expiration, no backend needed.
          */
         val PERMANENT_OTPS: List<String> = listOf(
-            "1010",
-            "2020",
-            "3030",
-            "4040",
-            "5050",
-            "1122",
-            "2233",
-            "3344",
-            "4455",
-            "5566"
+            "1010", "2020", "3030", "4040", "5050",
+            "6060", "7070", "8080", "9090", "1122",
+            "2233", "3344", "4455", "5566", "6677",
+            "7788", "8899", "1234", "4321", "9876"
         )
     }
 
