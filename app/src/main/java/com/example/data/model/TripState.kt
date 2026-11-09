@@ -18,6 +18,7 @@ data class TripState(
     val endTime: Long = 0L,
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val bearing: Float = 0f,
     val isSimulationEnabled: Boolean = false,
     val isOutOfCity: Boolean = false,
     val outOfCitySurchargePercent: Double = 0.0,

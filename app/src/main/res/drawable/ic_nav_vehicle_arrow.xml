@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="44"
+    android:viewportHeight="44">
+    <!-- Outer Soft Halo / Pulse -->
+    <path
+        android:fillColor="#331A73E8"
+        android:pathData="M22,22m-21,0a21,21 0 1,0 42,0a21,21 0 1,0 -42,0" />
+    <!-- White Shield Base with elevation ring -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="1.5"
+        android:pathData="M22,22m-15,0a15,15 0 1,0 30,0a15,15 0 1,0 -30,0" />
+    <!-- Navigation 3D Direction Arrow (Electric Google Blue) -->
+    <path
+        android:fillColor="#1A73E8"
+        android:pathData="M22,9 L32,31 L22,26 L12,31 Z" />
+    <!-- Inner Dark Accent Shade for 3D depth -->
+    <path
+        android:fillColor="#1557B0"
+        android:pathData="M22,9 L22,26 L12,31 Z" />
+    <!-- Center Point Indicator -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,22m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+</vector>

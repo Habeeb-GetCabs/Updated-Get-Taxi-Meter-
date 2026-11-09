@@ -1147,10 +1147,12 @@ class LocationTrackingService : Service() {
                 0f
             }
             val liveSpeedKmh = if (rawSpeedKmh < 0.8f) 0f else rawSpeedKmh
+            val idleBearing = if (location.hasBearing() && location.bearing != 0f) location.bearing else currentState.bearing
             _tripState.value = currentState.copy(
                 speedKmH = liveSpeedKmh,
                 latitude = location.latitude,
-                longitude = location.longitude
+                longitude = location.longitude,
+                bearing = idleBearing
             )
             if (currentState.status == TripStatus.PAUSED) {
                 floatingSpeedOverlay.updateSpeed(liveSpeedKmh)
@@ -1187,6 +1189,17 @@ class LocationTrackingService : Service() {
             }
         }
 
+        val calculatedBearing = if (location.hasBearing() && location.bearing != 0f) {
+            location.bearing
+        } else if (currentState.routePoints.isNotEmpty()) {
+            val lastPt = currentState.routePoints.last()
+            val bearingRes = FloatArray(2)
+            Location.distanceBetween(lastPt.first, lastPt.second, location.latitude, location.longitude, bearingRes)
+            if (bearingRes[0] >= 1.0f) bearingRes[1] else currentState.bearing
+        } else {
+            currentState.bearing
+        }
+
         _tripState.value = currentState.copy(
             distanceKm = processResult.totalDistanceKm,
             speedKmH = processResult.speedKmH,
@@ -1194,6 +1207,7 @@ class LocationTrackingService : Service() {
             isWaitingPaused = processResult.isMoving,
             latitude = location.latitude,
             longitude = location.longitude,
+            bearing = calculatedBearing,
             routePoints = updatedRoutePoints
         )
 

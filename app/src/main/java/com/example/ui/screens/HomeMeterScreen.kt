@@ -519,12 +519,19 @@ fun HomeMeterScreen(
                         }
                     }
 
-                    // ENLARGED LIVE CENTRE-CONSOLE MAP
+                    // ENLARGED LIVE CENTRE-CONSOLE MAP (GOOGLE MAPS DRIVING INTERFACE)
                     TripMapView(
                         tripState = tripState,
+                        isNavigationConsoleMode = true,
+                        onOpenMeterDetails = { viewModel.showMeterDetails() },
+                        onEndTrip = {
+                            viewModel.completeTripAndSave("", "", "") { savedId ->
+                                onNavigateToSummary(savedId.toInt())
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(430.dp)
+                            .height(500.dp)
                             .testTag("active_trip_enlarged_map")
                     )
 
