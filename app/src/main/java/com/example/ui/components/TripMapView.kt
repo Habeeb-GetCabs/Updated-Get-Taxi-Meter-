@@ -1,14 +1,8 @@
 package com.example.ui.components
 
-import android.annotation.SuppressLint
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
-import android.view.MotionEvent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,16 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import com.example.BuildConfig
-import com.example.R
 import com.example.data.model.TripState
 import com.example.util.DestinationSearchService
 import com.example.util.SearchPlaceResult
@@ -46,18 +36,10 @@ import com.google.maps.android.compose.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.tileprovider.tilesource.XYTileSource
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
 import java.util.Locale
 
 enum class MapTypeMode {
-    OSM_CLASSIC,       // OpenStreetMap Standard Mapnik (Detailed roads, street names, live GPS)
-    NAVIGATION_DARK,   // CartoDB Dark Matter: Night navigation mode
-    NAVIGATION_STREET, // CartoDB Voyager
+    OLA_MAPS_LIGHT,    // Ola Maps Official Vector Map (Light Standard style)
     GOOGLE_MAPS_SDK    // Google Maps SDK (if API key is supplied)
 }
 
@@ -65,30 +47,6 @@ enum class MapOrientationMode {
     NORTH_UP,          // Map orientation fixed at 0.0 (North is up)
     HEADING_UP         // Map rotates with vehicle heading, road ahead points towards top of screen
 }
-
-// Tile sources for clean, modern Google Maps navigation-style road presentation
-private val TILE_SOURCE_VOYAGER = XYTileSource(
-    "CartoVoyager",
-    0, 20, 256, ".png",
-    arrayOf(
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://d.basemaps.cartocdn.com/rastertiles/voyager/"
-    ),
-    "© OpenStreetMap contributors, © CARTO"
-)
-
-private val TILE_SOURCE_DARK = XYTileSource(
-    "CartoDark",
-    0, 20, 256, ".png",
-    arrayOf(
-        "https://a.basemaps.cartocdn.com/rastertiles/dark_all/",
-        "https://b.basemaps.cartocdn.com/rastertiles/dark_all/",
-        "https://c.basemaps.cartocdn.com/rastertiles/dark_all/"
-    ),
-    "© OpenStreetMap contributors, © CARTO"
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,8 +70,8 @@ fun TripMapView(
             !mapsApiKey.contains("MY_GEMINI_API_KEY", ignoreCase = true) &&
             !mapsApiKey.contains("AIzaSyB7j5s8T369OKe4H69e3jhkGfM2sJhniCo", ignoreCase = true)
 
-    // Primary default map style is OpenStreetMap Standard Mapnik with all roads, streets and labels
-    var selectedMode by remember { mutableStateOf(MapTypeMode.OSM_CLASSIC) }
+    // Primary default map style is Ola Maps Official Vector Map
+    var selectedMode by remember { mutableStateOf(MapTypeMode.OLA_MAPS_LIGHT) }
     var orientationMode by remember { mutableStateOf(MapOrientationMode.NORTH_UP) }
     var isFollowingVehicle by remember { mutableStateOf(true) }
 
@@ -157,7 +115,7 @@ fun TripMapView(
         }
     }
 
-    // Explicit function to calculate suggested guidance route (called only when destination is chosen or recalculated)
+    // Explicit function to calculate suggested guidance route
     fun calculateRouteToDestination(dest: SearchPlaceResult) {
         val curLat = tripState.latitude ?: 11.0168
         val curLon = tripState.longitude ?: 76.9558
@@ -174,7 +132,7 @@ fun TripMapView(
         }
     }
 
-    // Trigger route calculation ONLY when destination is selected (NEVER called repeatedly on every GPS tick)
+    // Trigger route calculation ONLY when destination is selected
     LaunchedEffect(selectedDestination) {
         val dest = selectedDestination
         if (dest != null) {
@@ -201,40 +159,9 @@ fun TripMapView(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             when (selectedMode) {
-                MapTypeMode.NAVIGATION_STREET -> {
-                    OpenStreetMapTileView(
+                MapTypeMode.OLA_MAPS_LIGHT -> {
+                    OlaMapView(
                         tripState = tripState,
-                        tileSourceType = MapTypeMode.NAVIGATION_STREET,
-                        orientationMode = orientationMode,
-                        destination = selectedDestination,
-                        suggestedRoute = suggestedRoute,
-                        isFollowingVehicle = isFollowingVehicle,
-                        recenterTrigger = recenterTrigger,
-                        zoomInTrigger = zoomInTrigger,
-                        zoomOutTrigger = zoomOutTrigger,
-                        onUserPan = { isFollowingVehicle = false },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                MapTypeMode.NAVIGATION_DARK -> {
-                    OpenStreetMapTileView(
-                        tripState = tripState,
-                        tileSourceType = MapTypeMode.NAVIGATION_DARK,
-                        orientationMode = orientationMode,
-                        destination = selectedDestination,
-                        suggestedRoute = suggestedRoute,
-                        isFollowingVehicle = isFollowingVehicle,
-                        recenterTrigger = recenterTrigger,
-                        zoomInTrigger = zoomInTrigger,
-                        zoomOutTrigger = zoomOutTrigger,
-                        onUserPan = { isFollowingVehicle = false },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                MapTypeMode.OSM_CLASSIC -> {
-                    OpenStreetMapTileView(
-                        tripState = tripState,
-                        tileSourceType = MapTypeMode.OSM_CLASSIC,
                         orientationMode = orientationMode,
                         destination = selectedDestination,
                         suggestedRoute = suggestedRoute,
@@ -255,7 +182,6 @@ fun TripMapView(
                             cameraPositionState = cameraPositionState,
                             properties = MapProperties(isMyLocationEnabled = false)
                         ) {
-                            // Actual GPS Driven Route (Crimson Red with rounded finish)
                             if (latLngRoute.size >= 2) {
                                 Polyline(
                                     points = latLngRoute,
@@ -263,7 +189,6 @@ fun TripMapView(
                                     width = 10f
                                 )
                             }
-                            // Suggested Driving Guidance Route (Google Maps Blue with casing)
                             if (latLngSuggested.size >= 2) {
                                 Polyline(
                                     points = latLngSuggested,
@@ -276,7 +201,6 @@ fun TripMapView(
                                     width = 10f
                                 )
                             }
-                            // Live Vehicle Marker
                             if (tripState.latitude != null && tripState.longitude != null) {
                                 Marker(
                                     state = rememberMarkerState(position = currentLatLng),
@@ -285,7 +209,6 @@ fun TripMapView(
                                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                                 )
                             }
-                            // Destination Marker
                             selectedDestination?.let { dest ->
                                 Marker(
                                     state = rememberMarkerState(position = LatLng(dest.latitude, dest.longitude)),
@@ -296,9 +219,8 @@ fun TripMapView(
                             }
                         }
                     } else {
-                        OpenStreetMapTileView(
+                        OlaMapView(
                             tripState = tripState,
-                            tileSourceType = MapTypeMode.NAVIGATION_STREET,
                             orientationMode = orientationMode,
                             destination = selectedDestination,
                             suggestedRoute = suggestedRoute,
@@ -320,7 +242,6 @@ fun TripMapView(
                     .align(Alignment.TopCenter)
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
-                // In expanded mode, show GET TAXI logo at top-left and collapse button
                 if (isExpanded && onToggleExpand != null) {
                     Row(
                         modifier = Modifier
@@ -413,7 +334,7 @@ fun TripMapView(
                             decorationBox = { innerTextField ->
                                 if (searchQuery.isEmpty()) {
                                     Text(
-                                        text = "Search destination (streets, areas, landmarks)...",
+                                        text = "Search destination via Ola Maps...",
                                         color = Color(0xFF94A3B8),
                                         fontSize = 12.sp
                                     )
@@ -449,7 +370,6 @@ fun TripMapView(
                             }
                         }
 
-                        // Expand map button when in normal mode
                         if (!isExpanded && onToggleExpand != null) {
                             IconButton(
                                 onClick = onToggleExpand,
@@ -468,7 +388,6 @@ fun TripMapView(
                     }
                 }
 
-                // Autocomplete Suggestions Dropdown Box
                 AnimatedVisibility(
                     visible = searchResults.isNotEmpty(),
                     enter = fadeIn(),
@@ -529,7 +448,6 @@ fun TripMapView(
                     }
                 }
 
-                // Selected Destination Driving Guidance Banner
                 selectedDestination?.let { dest ->
                     Surface(
                         color = Color(0xFF1E293B),
@@ -575,7 +493,7 @@ fun TripMapView(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = "Route Guidance (Visual Only)",
+                                        text = "Ola Maps Guidance",
                                         color = Color(0xFF94A3B8),
                                         fontSize = 10.sp
                                     )
@@ -583,7 +501,6 @@ fun TripMapView(
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Explicit recalculate route button
                                 IconButton(
                                     onClick = { calculateRouteToDestination(dest) },
                                     modifier = Modifier.size(28.dp)
@@ -626,7 +543,6 @@ fun TripMapView(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Compass / Orientation Control (North-Up vs Heading-Up)
                 Surface(
                     onClick = {
                         orientationMode = if (orientationMode == MapOrientationMode.NORTH_UP) {
@@ -667,7 +583,6 @@ fun TripMapView(
                     }
                 }
 
-                // Zoom Controls Stack
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = Color.White,
@@ -703,7 +618,7 @@ fun TripMapView(
                 }
             }
 
-            // RE-CENTER TO VEHICLE BUTTON (Prominently displayed when user pans/inspects)
+            // RE-CENTER TO VEHICLE BUTTON
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -752,7 +667,6 @@ fun TripMapView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Recenter on vehicle standard 48dp FAB if already following
                     if (isFollowingVehicle) {
                         FloatingActionButton(
                             onClick = { recenterTrigger = System.currentTimeMillis() },
@@ -773,17 +687,14 @@ fun TripMapView(
                         Spacer(modifier = Modifier.width(48.dp))
                     }
 
-                    // Map Style Switcher (Voyager Clean Road / Night / OSM)
                     Surface(
                         color = Color(0xFF0F172A).copy(alpha = 0.90f),
                         shape = RoundedCornerShape(12.dp),
                         shadowElevation = 3.dp,
                         modifier = Modifier.clickable {
                             selectedMode = when (selectedMode) {
-                                MapTypeMode.NAVIGATION_STREET -> MapTypeMode.NAVIGATION_DARK
-                                MapTypeMode.NAVIGATION_DARK -> MapTypeMode.OSM_CLASSIC
-                                MapTypeMode.OSM_CLASSIC -> if (isGoogleKeyConfigured) MapTypeMode.GOOGLE_MAPS_SDK else MapTypeMode.NAVIGATION_STREET
-                                MapTypeMode.GOOGLE_MAPS_SDK -> MapTypeMode.NAVIGATION_STREET
+                                MapTypeMode.OLA_MAPS_LIGHT -> if (isGoogleKeyConfigured) MapTypeMode.GOOGLE_MAPS_SDK else MapTypeMode.OLA_MAPS_LIGHT
+                                MapTypeMode.GOOGLE_MAPS_SDK -> MapTypeMode.OLA_MAPS_LIGHT
                             }
                         }
                     ) {
@@ -793,16 +704,14 @@ fun TripMapView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Layers,
-                                contentDescription = "Switch Map Style",
+                                contentDescription = "Switch Map Engine",
                                 tint = Color(0xFF38BDF8),
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = when (selectedMode) {
-                                    MapTypeMode.NAVIGATION_STREET -> "Google Style"
-                                    MapTypeMode.NAVIGATION_DARK -> "Night Nav"
-                                    MapTypeMode.OSM_CLASSIC -> "OSM Classic"
+                                    MapTypeMode.OLA_MAPS_LIGHT -> "Ola Maps"
                                     MapTypeMode.GOOGLE_MAPS_SDK -> "Google Maps"
                                 },
                                 fontSize = 10.sp,
@@ -830,13 +739,11 @@ fun TripMapView(
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
-                        // Metrics Row (Speed, Fare, Distance, Duration)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Live Speed
                             Column {
                                 Text(
                                     text = "SPEED",
@@ -852,7 +759,6 @@ fun TripMapView(
                                 )
                             }
 
-                            // Current Fare
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "LIVE FARE",
@@ -868,7 +774,6 @@ fun TripMapView(
                                 )
                             }
 
-                            // Distance
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "DISTANCE",
@@ -884,7 +789,6 @@ fun TripMapView(
                                 )
                             }
 
-                            // Duration
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
                                     text = "TIME",
@@ -905,13 +809,11 @@ fun TripMapView(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Action Buttons Row (Pause/Resume + Meter Details + End Trip)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Pause / Resume Trip Button
                             if (onPauseTrip != null || onResumeTrip != null) {
                                 val isPaused = tripState.status == com.example.data.model.TripStatus.PAUSED
                                 Button(
@@ -942,7 +844,6 @@ fun TripMapView(
                                 }
                             }
 
-                            // Meter Details Button
                             if (onOpenMeterDetails != null) {
                                 Button(
                                     onClick = onOpenMeterDetails,
@@ -972,7 +873,6 @@ fun TripMapView(
                                 }
                             }
 
-                            // End Trip Button
                             if (onEndTrip != null) {
                                 Button(
                                     onClick = onEndTrip,
@@ -1007,163 +907,4 @@ fun TripMapView(
             }
         }
     }
-}
-
-@SuppressLint("ClickableViewAccessibility")
-@Composable
-private fun OpenStreetMapTileView(
-    tripState: TripState,
-    tileSourceType: MapTypeMode,
-    orientationMode: MapOrientationMode,
-    destination: SearchPlaceResult? = null,
-    suggestedRoute: List<Pair<Double, Double>> = emptyList(),
-    isFollowingVehicle: Boolean = true,
-    recenterTrigger: Long = 0L,
-    zoomInTrigger: Long = 0L,
-    zoomOutTrigger: Long = 0L,
-    onUserPan: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val lat = tripState.latitude ?: 11.0168
-    val lon = tripState.longitude ?: 76.9558
-    val routePoints = tripState.routePoints
-
-    LaunchedEffect(Unit) {
-        org.osmdroid.config.Configuration.getInstance().userAgentValue = "GET_TAXI_Android_App/1.0 (${context.packageName})"
-    }
-
-    AndroidView(
-        factory = { ctx ->
-            org.osmdroid.config.Configuration.getInstance().userAgentValue = "GET_TAXI_Android_App/1.0 (${ctx.packageName})"
-            MapView(ctx).apply {
-                val tileSource = when (tileSourceType) {
-                    MapTypeMode.NAVIGATION_DARK -> TILE_SOURCE_DARK
-                    MapTypeMode.NAVIGATION_STREET -> TILE_SOURCE_VOYAGER
-                    else -> TileSourceFactory.MAPNIK
-                }
-                setTileSource(tileSource)
-                setMultiTouchControls(true)
-                isTilesScaledToDpi = true
-                controller.setZoom(17.5)
-                controller.setCenter(GeoPoint(lat, lon))
-
-                // Detect driver manual pan/drag gesture to toggle off auto-follow
-                setOnTouchListener { _, event ->
-                    if (event.action == MotionEvent.ACTION_MOVE) {
-                        onUserPan()
-                    }
-                    false
-                }
-            }
-        },
-        update = { mapView ->
-            // Switch tile source if style changed
-            val targetTileSource = when (tileSourceType) {
-                MapTypeMode.NAVIGATION_DARK -> TILE_SOURCE_DARK
-                MapTypeMode.NAVIGATION_STREET -> TILE_SOURCE_VOYAGER
-                else -> TileSourceFactory.MAPNIK
-            }
-            if (mapView.tileProvider.tileSource.name() != targetTileSource.name()) {
-                mapView.setTileSource(targetTileSource)
-            }
-
-            mapView.overlays.clear()
-
-            val geoPoint = GeoPoint(lat, lon)
-
-            // Handle Zoom Controls
-            if (zoomInTrigger > 0L) {
-                mapView.controller.zoomIn()
-            }
-            if (zoomOutTrigger > 0L) {
-                mapView.controller.zoomOut()
-            }
-
-            // Map Orientation: Heading-Up vs North-Up
-            if (orientationMode == MapOrientationMode.HEADING_UP && tripState.bearing != 0f) {
-                mapView.mapOrientation = -tripState.bearing
-            } else {
-                mapView.mapOrientation = 0f
-            }
-
-            // Smooth vehicle centering / auto-following
-            if (isFollowingVehicle || recenterTrigger > 0L) {
-                mapView.controller.animateTo(geoPoint)
-            }
-
-            // 1. Draw Suggested Guidance Route (Google Maps Blue with rounded edges & under-casing)
-            if (suggestedRoute.size >= 2) {
-                // Outer casing for contrast against white streets
-                val outerCasing = Polyline(mapView).apply {
-                    outlinePaint.color = android.graphics.Color.parseColor("#1557B0")
-                    outlinePaint.strokeWidth = 16f
-                    outlinePaint.strokeCap = Paint.Cap.ROUND
-                    outlinePaint.strokeJoin = Paint.Join.ROUND
-                    setPoints(suggestedRoute.map { GeoPoint(it.first, it.second) })
-                }
-                mapView.overlays.add(outerCasing)
-
-                // Inner Electric Blue Polyline
-                val innerLine = Polyline(mapView).apply {
-                    outlinePaint.color = android.graphics.Color.parseColor("#1A73E8")
-                    outlinePaint.strokeWidth = 10f
-                    outlinePaint.strokeCap = Paint.Cap.ROUND
-                    outlinePaint.strokeJoin = Paint.Join.ROUND
-                    setPoints(suggestedRoute.map { GeoPoint(it.first, it.second) })
-                }
-                mapView.overlays.add(innerLine)
-            }
-
-            // 2. Draw Actual GPS Recorded Route (Crimson Red with rounded finish)
-            if (routePoints.size >= 2) {
-                val polyline = Polyline(mapView).apply {
-                    outlinePaint.color = android.graphics.Color.parseColor("#DC2626")
-                    outlinePaint.strokeWidth = 10f
-                    outlinePaint.strokeCap = Paint.Cap.ROUND
-                    outlinePaint.strokeJoin = Paint.Join.ROUND
-                    setPoints(routePoints.map { GeoPoint(it.first, it.second) })
-                }
-                mapView.overlays.add(polyline)
-
-                // Trip Start Marker
-                val startPoint = GeoPoint(routePoints.first().first, routePoints.first().second)
-                val startMarker = Marker(mapView).apply {
-                    position = startPoint
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.ic_start_flag)
-                    title = "Trip Start"
-                }
-                mapView.overlays.add(startMarker)
-            }
-
-            // 3. Destination Pin Marker if destination is selected
-            destination?.let { dest ->
-                val destPoint = GeoPoint(dest.latitude, dest.longitude)
-                val destMarker = Marker(mapView).apply {
-                    position = destPoint
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.ic_destination_pin)
-                    title = dest.name
-                    snippet = dest.description
-                }
-                mapView.overlays.add(destMarker)
-            }
-
-            // 4. Live Vehicle Navigation Marker with Directional Orientation
-            val navVehicleMarker = Marker(mapView).apply {
-                position = geoPoint
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                icon = ContextCompat.getDrawable(mapView.context, R.drawable.ic_nav_vehicle_arrow)
-                // In Heading-Up mode, the map rotates and the vehicle arrow points straight forward (0f)
-                // In North-Up mode, the vehicle arrow rotates to match the GPS bearing
-                rotation = if (orientationMode == MapOrientationMode.HEADING_UP) 0f else tripState.bearing
-                title = "Live Vehicle Location"
-            }
-            mapView.overlays.add(navVehicleMarker)
-
-            mapView.invalidate()
-        },
-        modifier = modifier
-    )
 }
