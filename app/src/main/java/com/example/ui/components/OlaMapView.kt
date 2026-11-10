@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Color as AndroidColor
 import android.view.View
 import android.webkit.JavascriptInterface
@@ -9,8 +8,6 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,14 +18,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.BuildConfig
 import com.example.data.model.TripState
 import com.example.util.SearchPlaceResult
 import org.json.JSONArray
@@ -47,19 +42,6 @@ fun OlaMapView(
     onUserPan: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
-    // Safely retrieve OLA_MAPS_API_KEY from BuildConfig / Secrets with fail-safe fallback
-    val rawKey = try { BuildConfig.OLA_MAPS_API_KEY } catch (e: Exception) { "" }
-    val cleanApiKey = if (rawKey.isNotBlank() &&
-        !rawKey.contains("DEFAULT", ignoreCase = true) &&
-        !rawKey.contains("MY_GEMINI", ignoreCase = true)
-    ) {
-        rawKey.trim()
-    } else {
-        "Joy3ugL9iGWXa7RSTvWSEcNkM7gx2iFPObU8R3Gy"
-    }
-
     var isMapLoaded by remember { mutableStateOf(false) }
     var mapErrorMessage by remember { mutableStateOf<String?>(null) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
@@ -172,66 +154,64 @@ fun OlaMapView(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        if (cleanApiKey.isNotBlank() && mapErrorMessage == null) {
-            AndroidView(
-                factory = { ctx ->
-                    WebView(ctx).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.allowFileAccess = true
-                        settings.useWideViewPort = true
-                        settings.loadWithOverviewMode = true
-                        setBackgroundColor(AndroidColor.parseColor("#F8FAFC"))
-                        overScrollMode = View.OVER_SCROLL_NEVER
+        AndroidView(
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.allowFileAccess = true
+                    settings.useWideViewPort = true
+                    settings.loadWithOverviewMode = true
+                    setBackgroundColor(AndroidColor.parseColor("#F8FAFC"))
+                    overScrollMode = View.OVER_SCROLL_NEVER
 
-                        addJavascriptInterface(object {
-                            @JavascriptInterface
-                            fun onMapLoaded() {
-                                isMapLoaded = true
-                                mapErrorMessage = null
-                            }
-
-                            @JavascriptInterface
-                            fun onMapError(errorMsg: String?) {
-                                isMapLoaded = false
-                                mapErrorMessage = errorMsg ?: "Failed to initialize Ola Maps API."
-                            }
-
-                            @JavascriptInterface
-                            fun onUserPan() {
-                                onUserPan()
-                            }
-                        }, "AndroidBridge")
-
-                        webViewClient = object : WebViewClient() {
-                            override fun onReceivedError(
-                                view: WebView?,
-                                request: WebResourceRequest?,
-                                error: WebResourceError?
-                            ) {
-                                super.onReceivedError(view, request, error)
-                                if (request?.isForMainFrame == true) {
-                                    mapErrorMessage = "Ola Maps Network Error: ${error?.description ?: "Unable to connect"}"
-                                }
-                            }
+                    addJavascriptInterface(object {
+                        @JavascriptInterface
+                        fun onMapLoaded() {
+                            isMapLoaded = true
+                            mapErrorMessage = null
                         }
 
-                        val htmlContent = buildOlaMapHtml(cleanApiKey, lat, lon)
-                        loadDataWithBaseURL("https://api.olamaps.io/", htmlContent, "text/html", "UTF-8", null)
-                        webViewInstance = this
-                    }
-                },
-                update = { wv ->
-                    webViewInstance = wv
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("ola_maps_webview")
-            )
-        }
+                        @JavascriptInterface
+                        fun onMapError(errorMsg: String?) {
+                            isMapLoaded = false
+                            mapErrorMessage = errorMsg ?: "Map load error."
+                        }
 
-        // Ola Maps Error Card (Displayed if API Key missing, invalid, or network failure)
-        if (mapErrorMessage != null || cleanApiKey.isBlank()) {
+                        @JavascriptInterface
+                        fun onUserPan() {
+                            onUserPan()
+                        }
+                    }, "AndroidBridge")
+
+                    webViewClient = object : WebViewClient() {
+                        override fun onReceivedError(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                            error: WebResourceError?
+                        ) {
+                            super.onReceivedError(view, request, error)
+                            if (request?.isForMainFrame == true) {
+                                mapErrorMessage = "Map Network Error: ${error?.description ?: "Unable to connect"}"
+                            }
+                        }
+                    }
+
+                    val htmlContent = buildCartoVectorMapHtml(lat, lon)
+                    loadDataWithBaseURL("https://basemaps.cartocdn.com/", htmlContent, "text/html", "UTF-8", null)
+                    webViewInstance = this
+                }
+            },
+            update = { wv ->
+                webViewInstance = wv
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("vector_maps_webview")
+        )
+
+        // Error Card (Displayed only if network is completely disconnected)
+        if (mapErrorMessage != null) {
             Surface(
                 color = Color(0xFF0F172A),
                 shape = RoundedCornerShape(20.dp),
@@ -239,7 +219,7 @@ fun OlaMapView(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
-                    .testTag("ola_maps_error_card")
+                    .testTag("vector_maps_error_card")
             ) {
                 Column(
                     modifier = Modifier
@@ -258,7 +238,7 @@ fun OlaMapView(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Ola Maps Initialization Failed",
+                        text = "Map Connection Error",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
@@ -268,7 +248,7 @@ fun OlaMapView(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = mapErrorMessage ?: "Please configure 'OLA_MAPS_API_KEY' in AI Studio Secrets to display the live Ola Maps interface.",
+                        text = mapErrorMessage ?: "Check internet connection to render live vector tiles.",
                         color = Color(0xFFCBD5E1),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
@@ -291,7 +271,7 @@ fun OlaMapView(
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Retry Ola Maps", fontWeight = FontWeight.Bold)
+                        Text("Retry Map", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -299,7 +279,7 @@ fun OlaMapView(
     }
 }
 
-private fun buildOlaMapHtml(apiKey: String, startLat: Double, startLon: Double): String {
+private fun buildCartoVectorMapHtml(startLat: Double, startLon: Double): String {
     return """
         <!DOCTYPE html>
         <html>
@@ -314,38 +294,40 @@ private fun buildOlaMapHtml(apiKey: String, startLat: Double, startLon: Double):
             .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
             
             .driver-marker {
-              width: 32px;
-              height: 32px;
+              width: 34px;
+              height: 34px;
               background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23DC2626"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
+              filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
               transition: transform 0.3s ease;
             }
             
             .dest-marker {
-              width: 32px;
-              height: 32px;
+              width: 34px;
+              height: 34px;
               background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231557B0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
+              filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
             }
           </style>
         </head>
         <body>
           <div id="map"></div>
           <script>
-            var apiKey = "$apiKey";
             var map = null;
             var driverMarkerElement = null;
             var driverMarker = null;
             var destMarker = null;
             var isMapReady = false;
 
-            function initOlaMap() {
+            function initCartoMap() {
               try {
-                var styleUrl = 'https://api.olamaps.io/tiles/v1/styles/default-light-standard/style.json?api_key=' + apiKey;
+                // Free, high-performance CartoDB Voyager GL style (OpenStreetMap vector tiles)
+                var styleUrl = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
                 map = new maplibregl.Map({
                   container: 'map',
                   style: styleUrl,
@@ -408,13 +390,6 @@ private fun buildOlaMapHtml(apiKey: String, startLat: Double, startLon: Double):
                   }
                 });
 
-                map.on('error', function(e) {
-                  if (window.AndroidBridge && window.AndroidBridge.onMapError) {
-                    var msg = (e && e.error && e.error.message) ? e.error.message : "Ola Maps Tile Load Error";
-                    window.AndroidBridge.onMapError(msg);
-                  }
-                });
-
                 map.on('dragstart', function() {
                   if (window.AndroidBridge && window.AndroidBridge.onUserPan) {
                     window.AndroidBridge.onUserPan();
@@ -423,7 +398,7 @@ private fun buildOlaMapHtml(apiKey: String, startLat: Double, startLon: Double):
 
               } catch (err) {
                 if (window.AndroidBridge && window.AndroidBridge.onMapError) {
-                  window.AndroidBridge.onMapError(err.message || "Failed to initialize Ola Maps.");
+                  window.AndroidBridge.onMapError(err.message || "Failed to initialize MapLibre Vector Map.");
                 }
               }
             }
@@ -495,9 +470,10 @@ private fun buildOlaMapHtml(apiKey: String, startLat: Double, startLon: Double):
             function zoomOut() { if (map) map.zoomOut(); }
             function recenter(lat, lon) { if (map) map.flyTo({ center: [lon, lat], zoom: 16.5 }); }
 
-            document.addEventListener('DOMContentLoaded', initOlaMap);
+            document.addEventListener('DOMContentLoaded', initCartoMap);
           </script>
         </body>
         </html>
     """.trimIndent()
 }
+

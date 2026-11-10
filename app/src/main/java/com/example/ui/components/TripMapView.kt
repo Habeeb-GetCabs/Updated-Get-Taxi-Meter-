@@ -334,7 +334,7 @@ fun TripMapView(
                             decorationBox = { innerTextField ->
                                 if (searchQuery.isEmpty()) {
                                     Text(
-                                        text = "Search destination via Ola Maps...",
+                                        text = "Search destination...",
                                         color = Color(0xFF94A3B8),
                                         fontSize = 12.sp
                                     )
@@ -711,7 +711,7 @@ fun TripMapView(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = when (selectedMode) {
-                                    MapTypeMode.OLA_MAPS_LIGHT -> "Ola Maps"
+                                    MapTypeMode.OLA_MAPS_LIGHT -> "Vector Map"
                                     MapTypeMode.GOOGLE_MAPS_SDK -> "Google Maps"
                                 },
                                 fontSize = 10.sp,
