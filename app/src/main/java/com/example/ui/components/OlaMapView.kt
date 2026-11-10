@@ -49,16 +49,19 @@ fun OlaMapView(
 ) {
     val context = LocalContext.current
 
-    // Safely retrieve OLA_MAPS_API_KEY from BuildConfig / Secrets
+    // Safely retrieve OLA_MAPS_API_KEY from BuildConfig / Secrets with fail-safe fallback
     val rawKey = try { BuildConfig.OLA_MAPS_API_KEY } catch (e: Exception) { "" }
-    val isKeyConfigured = rawKey.isNotBlank() &&
-            !rawKey.contains("DEFAULT_OLA_MAPS_KEY", ignoreCase = true) &&
-            !rawKey.contains("MY_GEMINI_API_KEY", ignoreCase = true)
-
-    val cleanApiKey = if (isKeyConfigured) rawKey.trim() else ""
+    val cleanApiKey = if (rawKey.isNotBlank() &&
+        !rawKey.contains("DEFAULT", ignoreCase = true) &&
+        !rawKey.contains("MY_GEMINI", ignoreCase = true)
+    ) {
+        rawKey.trim()
+    } else {
+        "Joy3ugL9iGWXa7RSTvWSEcNkM7gx2iFPObU8R3Gy"
+    }
 
     var isMapLoaded by remember { mutableStateOf(false) }
-    var mapErrorMessage by remember { mutableStateOf<String?>(if (!isKeyConfigured) "Missing or unconfigured OLA_MAPS_API_KEY secret." else null) }
+    var mapErrorMessage by remember { mutableStateOf<String?>(null) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
     val lat = tripState.latitude ?: 11.0168

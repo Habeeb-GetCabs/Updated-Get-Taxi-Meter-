@@ -1169,8 +1169,10 @@ fun HomeMeterScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.systemBars)
                     .background(Color(0xFF0F172A))
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(bottom = 12.dp)
             ) {
                 TripMapView(
                     tripState = tripState,

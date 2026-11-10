@@ -733,6 +733,8 @@ fun TripMapView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = 8.dp)
                 ) {
                     Box(
                         modifier = Modifier

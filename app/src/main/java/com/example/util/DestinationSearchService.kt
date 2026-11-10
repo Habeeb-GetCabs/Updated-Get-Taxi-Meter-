@@ -29,11 +29,11 @@ object DestinationSearchService {
     private fun getOlaMapsApiKey(): String {
         return try {
             val key = BuildConfig.OLA_MAPS_API_KEY
-            if (key.isNotBlank() && !key.contains("DEFAULT_OLA_MAPS_KEY", ignoreCase = true)) {
+            if (key.isNotBlank() && !key.contains("DEFAULT", ignoreCase = true)) {
                 key.trim()
-            } else ""
+            } else "Joy3ugL9iGWXa7RSTvWSEcNkM7gx2iFPObU8R3Gy"
         } catch (e: Exception) {
-            ""
+            "Joy3ugL9iGWXa7RSTvWSEcNkM7gx2iFPObU8R3Gy"
         }
     }
 
