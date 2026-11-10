@@ -1904,7 +1904,6 @@ private fun OtpTripDialog(
 ) {
     var enteredOtp by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showCodesList by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -2001,51 +2000,7 @@ private fun OtpTripDialog(
                         .testTag("trip_otp_input_field")
                 )
 
-                if (errorMessage != null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = errorMessage ?: "",
-                        color = Color(0xFFDC2626),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = { showCodesList = !showCodesList },
-                    modifier = Modifier.testTag("toggle_otp_codes_helper")
-                ) {
-                    Text(
-                        text = if (showCodesList) "Hide Standard 20 OTPs" else "View Standard 20 OTPs",
-                        fontSize = 11.sp,
-                        color = Color(0xFF2563EB),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                if (showCodesList) {
-                    Surface(
-                        color = Color(0xFFF1F5F9),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = TripOtpManager.PERMANENT_OTPS.chunked(5).joinToString("\n") { row -> row.joinToString("   ") },
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF334155),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

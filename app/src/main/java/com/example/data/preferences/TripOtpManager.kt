@@ -51,12 +51,7 @@ class TripOtpManager(private val context: Context) {
          * 20 permanent, easy-to-note 4-digit Trip OTP codes that can be shared with
          * drivers and customers at any time. Reusable, no burn/expiration, no backend needed.
          */
-        val PERMANENT_OTPS: List<String> = listOf(
-            "1010", "2020", "3030", "4040", "5050",
-            "6060", "7070", "8080", "9090", "1122",
-            "2233", "3344", "4455", "5566", "6677",
-            "7788", "8899", "1234", "4321", "9876"
-        )
+        val PERMANENT_OTPS: List<String> = listOf("1981", "1974", "1983", "1984", "2002")
     }
 
     /**

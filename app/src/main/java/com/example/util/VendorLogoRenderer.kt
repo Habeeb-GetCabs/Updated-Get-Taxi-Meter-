@@ -561,47 +561,18 @@ object VendorLogoRenderer {
     fun generateSvgMarkup(vendorName: String): String = generateVendorSvgXml(vendorName)
 
     /**
-     * Creates the rounded trapezoid badge path for the logo.
+     * Creates the horizontal rounded-rectangle badge path for the logo.
      */
     fun createBadgeTrapezoidPath(width: Float, height: Float): Path {
         val path = Path()
-        val topInset = width * 0.085f
-        val topCornerX = width * 0.095f
-        val topCornerY = height * 0.24f
-        val bottomInset = width * 0.01f
-        val bottomCornerX = width * 0.08f
-        val bottomCornerY = height * 0.26f
-
-        path.moveTo(topInset + topCornerX, height * 0.04f)
-        path.lineTo(width - topInset - topCornerX, height * 0.04f)
-        path.quadTo(
-            width - topInset,
+        val cornerRadius = height * 0.22f
+        val rectF = android.graphics.RectF(
+            width * 0.02f,
             height * 0.04f,
-            width - topInset + (topInset - bottomInset) * 0.28f,
-            topCornerY
-        )
-        path.lineTo(width - bottomInset, height - bottomCornerY)
-        path.quadTo(
-            width + bottomInset * 0.3f,
-            height * 0.96f,
-            width - bottomCornerX,
+            width * 0.98f,
             height * 0.96f
         )
-        path.lineTo(bottomCornerX, height * 0.96f)
-        path.quadTo(
-            -bottomInset * 0.3f,
-            height * 0.96f,
-            bottomInset,
-            height - bottomCornerY
-        )
-        path.lineTo(topInset - (topInset - bottomInset) * 0.28f, topCornerY)
-        path.quadTo(
-            topInset,
-            height * 0.04f,
-            topInset + topCornerX,
-            height * 0.04f
-        )
-        path.close()
+        path.addRoundRect(rectF, cornerRadius, cornerRadius, Path.Direction.CW)
         return path
     }
 
@@ -774,7 +745,7 @@ object VendorLogoRenderer {
                   <stop offset="100%" stop-color="${colorTheme.bgEndHex}"/>
                 </linearGradient>
               </defs>
-              <path d="M 108 10 L 492 10 Q 545 10 558 62 L 594 192 Q 602 250 546 250 L 54 250 Q -2 250 6 192 L 42 62 Q 55 10 108 10 Z" fill="url(#badgeGrad)" stroke="${colorTheme.accentTextHex}" stroke-opacity="0.35" stroke-width="4"/>
+              <rect x="15" y="10" width="570" height="240" rx="48" ry="48" fill="url(#badgeGrad)" stroke="${colorTheme.accentTextHex}" stroke-opacity="0.35" stroke-width="4"/>
               <text x="300" y="148" text-anchor="middle" font-family="${fontStyle.svgFontFamily}" font-weight="bold" font-style="italic" font-size="$fontSize">
                 <tspan fill="${colorTheme.primaryTextHex}">$escapedWhite</tspan><tspan fill="${colorTheme.accentTextHex}"> $escapedYellow</tspan>
               </text>

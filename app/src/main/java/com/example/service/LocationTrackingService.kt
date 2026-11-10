@@ -936,7 +936,18 @@ class LocationTrackingService : Service() {
                 liveExtraChargesTotal = 0.0
             )
 
-            announceVoice("Ride completed. Total fare ${currentState.currency}${String.format(Locale.US, "%.2f", currentState.currentFare)}")
+            val tamilMessage = "உங்கள் பயணத்திற்கு நன்றி. இந்த நாள் இனிய நாளாக அமையட்டும். இறங்குவதற்கு முன் உங்கள் உடைமைகளைச் சரிபார்த்துக் கொள்ளவும். நன்றி."
+            if (isTtsInitialized) {
+                val taLocale = Locale.forLanguageTag("ta-IN")
+                val langResult = tts?.setLanguage(taLocale)
+                if (langResult != TextToSpeech.LANG_MISSING_DATA && langResult != TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts?.setPitch(1.1f)
+                    tts?.setSpeechRate(0.95f)
+                }
+                tts?.speak(tamilMessage, TextToSpeech.QUEUE_FLUSH, null, "TRIP_FINISH")
+            } else {
+                announceVoice("Ride completed. Total fare ${currentState.currency}${String.format(Locale.US, "%.2f", currentState.currentFare)}")
+            }
             recordDiagnostic("Ride completed: ${currentState.tripNumber}, Final distance: ${String.format(Locale.US, "%.2f", currentState.distanceKm)} km")
 
             serviceScope.launch {

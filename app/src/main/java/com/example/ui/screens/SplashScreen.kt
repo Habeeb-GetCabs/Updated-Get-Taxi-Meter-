@@ -65,26 +65,6 @@ fun SplashScreen(onNavigateToHome: () -> Unit) {
                     .scale(scale.value)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "GET TAXI",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                color = Color(0xFF0F172A),
-                letterSpacing = 2.sp,
-                modifier = Modifier.scale(scale.value)
-            )
-
-            val strings = com.example.util.appStrings()
-            Text(
-                text = strings.splashSubtitle,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFFE53935),
-                letterSpacing = if (strings.isTamil) 0.2.sp else 1.5.sp,
-                modifier = Modifier.scale(scale.value)
-            )
         }
     }
 }
