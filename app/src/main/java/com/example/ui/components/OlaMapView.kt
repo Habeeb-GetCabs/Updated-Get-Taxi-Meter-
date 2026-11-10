@@ -160,9 +160,13 @@ fun OlaMapView(
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.allowFileAccess = true
+                    settings.allowContentAccess = true
+                    settings.allowFileAccessFromFileURLs = true
+                    settings.allowUniversalAccessFromFileURLs = true
                     settings.useWideViewPort = true
+                    settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                    setBackgroundColor(AndroidColor.parseColor("#E2E8F0"))
+                    setBackgroundColor(AndroidColor.parseColor("#F8FAFC"))
                     overScrollMode = View.OVER_SCROLL_NEVER
 
                     addJavascriptInterface(object {
@@ -198,7 +202,7 @@ fun OlaMapView(
                     }
 
                     val htmlContent = buildLeafletCartoMapHtml(lat, lon)
-                    loadDataWithBaseURL("https://basemaps.cartocdn.com/", htmlContent, "text/html", "UTF-8", null)
+                    loadDataWithBaseURL("file:///android_asset/leaflet/", htmlContent, "text/html", "UTF-8", null)
                     webViewInstance = this
                 }
             },
@@ -286,8 +290,8 @@ private fun buildLeafletCartoMapHtml(startLat: Double, startLon: Double): String
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <link rel="stylesheet" href="leaflet.css" />
+          <script src="leaflet.js"></script>
           <style>
             * { box-sizing: border-box; }
             body, html, #map { margin: 0; padding: 0; width: 100%; height: 100%; background: #F8FAFC; overflow: hidden; }

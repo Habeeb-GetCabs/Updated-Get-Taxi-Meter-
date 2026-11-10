@@ -726,7 +726,7 @@ fun TripMapView(
             // NAVIGATION CONSOLE HUD: CLEAN BOTTOM CONTROL BAR DURING ACTIVE TRIP
             if (isNavigationConsoleMode) {
                 Surface(
-                    color = Color(0xFF0F172A).copy(alpha = 0.92f),
+                    color = Color(0xFF0F172A).copy(alpha = 0.95f),
                     shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                     shadowElevation = 8.dp,
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
@@ -734,7 +734,7 @@ fun TripMapView(
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(bottom = 8.dp)
+                        .padding(bottom = 12.dp)
                 ) {
                     Box(
                         modifier = Modifier

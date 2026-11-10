@@ -1171,8 +1171,6 @@ fun HomeMeterScreen(
                     .fillMaxSize()
                     .background(Color(0xFF0F172A))
                     .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .padding(bottom = 12.dp)
             ) {
                 TripMapView(
                     tripState = tripState,
