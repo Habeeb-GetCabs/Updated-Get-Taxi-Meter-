@@ -517,7 +517,7 @@ fun HomeMeterScreen(
                         .testTag("enlarged_active_trip_map_section"),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // LIVE CENTRE-CONSOLE MAP (GOOGLE MAPS DRIVING INTERFACE)
+                    // LIVE CENTRE-CONSOLE MAP WITH CLEAN MAP-FIRST CONTROLS
                     TripMapView(
                         tripState = tripState,
                         isNavigationConsoleMode = true,
@@ -533,50 +533,8 @@ fun HomeMeterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(500.dp)
+                            .height(540.dp)
                             .testTag("active_trip_enlarged_map")
-                    )
-
-                    // CLEARLY VISIBLE "METER DETAILS" SWITCH BUTTON
-                    Button(
-                        onClick = { viewModel.showMeterDetails() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF0F172A),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .testTag("meter_details_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Speed,
-                            contentDescription = null,
-                            tint = Color(0xFFF8B814),
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = strings.meterDetailsButton,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    // ACTIVE TRIP PAUSE / RESUME & END TRIP CONTROLS
-                    ActiveTripActionButtonsRow(
-                        status = tripState.status,
-                        currentMode = currentMode,
-                        onStartTrip = { viewModel.startTrip() },
-                        onPauseTrip = { viewModel.pauseTrip() },
-                        onResumeTrip = { viewModel.resumeTrip() },
-                        onEndTrip = {
-                            viewModel.completeTripAndSave("", "", "") { savedId ->
-                                onNavigateToSummary(savedId.toInt())
-                            }
-                        }
                     )
                 }
             } else {
@@ -1208,7 +1166,12 @@ fun HomeMeterScreen(
                 decorFitsSystemWindows = false
             )
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.systemBars)
+                    .background(Color(0xFF0F172A))
+            ) {
                 TripMapView(
                     tripState = tripState,
                     isNavigationConsoleMode = true,

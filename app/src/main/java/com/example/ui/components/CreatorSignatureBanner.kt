@@ -33,22 +33,11 @@ fun CreatorSignatureBanner(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp, horizontal = 16.dp)
+            .padding(vertical = 10.dp, horizontal = 16.dp)
             .testTag(testTag),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Designed & Developed by Basheer",
-            fontFamily = SignatureDisplayFont,
-            color = Color(0xFF0F296B),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         VendorLogoBadge(
             vendorId = VendorLogoRenderer.GET_TAXI_VENDOR_ID,

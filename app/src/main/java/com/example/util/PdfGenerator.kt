@@ -143,18 +143,13 @@ object PdfGenerator {
         canvas.drawBitmap(logoBitmap, null, logoDestRect, Paint(Paint.FILTER_BITMAP_FLAG))
 
         val brandTextX = MARGIN + 112f
-        paint.color = Color.rgb(202, 31, 47)
-        paint.textSize = 18f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText(vendorMeta.vendorName, brandTextX, currentY + 16f, paint)
-
         paint.color = Color.rgb(100, 116, 139)
         paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         if (vendorMeta.displayedBusinessLines.isEmpty()) {
-            canvas.drawText("${vendorMeta.vendorName} • Official Passenger Trip Invoice", brandTextX, currentY + 30f, paint)
+            canvas.drawText("${vendorMeta.vendorName} • Official Passenger Trip Invoice", brandTextX, currentY + 16f, paint)
         } else {
-            var lineOffset = 29f
+            var lineOffset = 14f
             vendorMeta.displayedBusinessLines.take(3).forEach { line ->
                 canvas.drawText(line, brandTextX, currentY + lineOffset, paint)
                 lineOffset += 11f
@@ -334,29 +329,7 @@ object PdfGenerator {
         val metricValue3 = if (mode == ServiceType.RENTAL) "${trip.billableHours} hr (5-min grace rule)" else "${waitMin}m ${waitSec}s"
         canvas.drawText(metricValue3, MARGIN + (metricColW * 2) + 84f, currentY + 74f, paint)
 
-        currentY += routeBoxHeight + 12f
-
-        // 4.5. TRIP ROUTE MAP SECTION (ACTUAL RECORDED GPS JOURNEY)
-        paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 10f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("TRIP ROUTE MAP (ACTUAL GPS-RECORDED JOURNEY)", MARGIN, currentY, paint)
-
-        currentY += 6f
-        val mapBoxHeight = 82f
-        val routeBitmap = TripRouteMapGenerator.getOrGenerateRouteMapBitmap(context, trip)
-        if (routeBitmap != null) {
-            val mapDestRect = RectF(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY + mapBoxHeight)
-            canvas.drawBitmap(routeBitmap, null, mapDestRect, Paint(Paint.FILTER_BITMAP_FLAG))
-            currentY += mapBoxHeight + 12f
-        } else {
-            drawRoundedCard(canvas, MARGIN, currentY, PAGE_WIDTH - (MARGIN * 2), 26f, Color.rgb(248, 250, 252), Color.rgb(226, 232, 240))
-            paint.color = Color.rgb(100, 116, 139)
-            paint.textSize = 8f
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            canvas.drawText("Route map unavailable for this trip (insufficient GPS coordinate history)", MARGIN + 12f, currentY + 16f, paint)
-            currentY += 32f
-        }
+        currentY += routeBoxHeight + 16f
 
         // 5. ITEMIZED CHARGES TABLE (SERVICE SPECIFIC)
         paint.color = Color.rgb(15, 23, 42)
@@ -571,7 +544,7 @@ object PdfGenerator {
         paint.color = Color.rgb(100, 116, 139)
         paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Designed & Developed by Basheer • Electronically generated trip invoice.", MARGIN, currentY + 12f, paint)
+        canvas.drawText("Electronically generated trip invoice.", MARGIN, currentY + 12f, paint)
     }
 
     fun generateVendorStatementPdf(context: Context, trip: TripEntity): File {
@@ -948,7 +921,7 @@ object PdfGenerator {
         paint.color = Color.rgb(100, 116, 139)
         paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Designed & Developed by Basheer • Electronically generated vendor audit statement.", MARGIN, currentY + 12f, paint)
+        canvas.drawText("Electronically generated vendor audit statement.", MARGIN, currentY + 12f, paint)
     }
 
     private fun drawRoundedCard(canvas: android.graphics.Canvas, x: Float, y: Float, width: Float, height: Float, bgColor: Int, borderColor: Int) {

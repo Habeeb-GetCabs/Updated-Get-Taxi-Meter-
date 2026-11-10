@@ -224,7 +224,7 @@ object UpiQrCodeGenerator {
         paint.color = Color.rgb(30, 41, 59)
         paint.textSize = 15f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("Designed & Developed by Basheer", width / 2f, height - 54f, paint)
+        canvas.drawText("Electronically generated payment QR card", width / 2f, height - 54f, paint)
 
         return bitmap
     }

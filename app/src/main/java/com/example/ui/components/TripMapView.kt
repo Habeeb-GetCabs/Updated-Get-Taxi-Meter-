@@ -723,10 +723,10 @@ fun TripMapView(
                 }
             }
 
-            // NAVIGATION CONSOLE HUD: COMPACT BOTTOM BAR DURING ACTIVE TRIP
+            // NAVIGATION CONSOLE HUD: CLEAN BOTTOM CONTROL BAR DURING ACTIVE TRIP
             if (isNavigationConsoleMode) {
                 Surface(
-                    color = Color(0xFF0F172A).copy(alpha = 0.94f),
+                    color = Color(0xFF0F172A).copy(alpha = 0.92f),
                     shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                     shadowElevation = 8.dp,
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
@@ -734,81 +734,11 @@ fun TripMapView(
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "SPEED",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                Text(
-                                    text = "${tripState.speedKmH.toInt()} km/h",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color.White
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "LIVE FARE",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                Text(
-                                    text = "${tripState.currency} ${String.format(Locale.US, "%.2f", tripState.currentFare)}",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color(0xFFF8B814)
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "DISTANCE",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                Text(
-                                    text = "${String.format(Locale.US, "%.2f", tripState.distanceKm)} km",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color(0xFF38BDF8)
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "TIME",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                val mins = tripState.durationSeconds / 60
-                                val secs = tripState.durationSeconds % 60
-                                Text(
-                                    text = String.format(Locale.US, "%02d:%02d", mins, secs),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFCBD5E1)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
