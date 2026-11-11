@@ -733,17 +733,15 @@ fun TripMapView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(bottom = 12.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (onPauseTrip != null || onResumeTrip != null) {
@@ -755,9 +753,9 @@ fun TripMapView(
                                         contentColor = Color.White
                                     ),
                                     shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                                     modifier = Modifier
-                                        .weight(1f)
+                                        .weight(0.9f)
                                         .height(44.dp)
                                         .testTag(if (isPaused) "resume_trip_button" else "pause_trip_button")
                                 ) {
@@ -765,13 +763,14 @@ fun TripMapView(
                                         imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                                         contentDescription = null,
                                         tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = if (isPaused) "Resume" else "Pause",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
                                     )
                                 }
                             }
@@ -784,9 +783,9 @@ fun TripMapView(
                                         contentColor = Color.White
                                     ),
                                     shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                                     modifier = Modifier
-                                        .weight(1f)
+                                        .weight(1.2f)
                                         .height(44.dp)
                                         .testTag("meter_details_button")
                                 ) {
@@ -794,13 +793,14 @@ fun TripMapView(
                                         imageVector = Icons.Default.Speed,
                                         contentDescription = null,
                                         tint = Color(0xFFF8B814),
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = "Meter Details",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
                                     )
                                 }
                             }
@@ -813,7 +813,7 @@ fun TripMapView(
                                         contentColor = Color.White
                                     ),
                                     shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(44.dp)
@@ -823,13 +823,14 @@ fun TripMapView(
                                         imageVector = Icons.Default.Stop,
                                         contentDescription = null,
                                         tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = "End Trip",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Black
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        maxLines = 1
                                     )
                                 }
                             }
